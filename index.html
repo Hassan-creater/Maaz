@@ -1,704 +1,201 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Happy Birthday, Maaz!</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="An interactive birthday card website for Maaz Usmani." />
-  <style>
-    :root{
-      --bg: #0b1220;
-      --card: #ffffff;
-      --text: #0f172a;
-      --muted: #475569;
-      --brand: #0ea5e9;   /* sky blue */
-      --accent: #f59e0b;  /* amber */
-      --accent-2:#22c55e; /* green */
-      --shadow: 0 12px 30px rgba(0,0,0,.25), 0 2px 10px rgba(0,0,0,.2);
-      --radius: 16px;
-      --page-gap: 18px; /* spine gap illusion */
-    }
-
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body{
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji";
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-
-    /* Stage */
-    .stage{
-      min-height: 100svh;
-      display: grid;
-      place-items: center;
-      padding: 24px;
-      position: relative;
-      overflow: hidden;
-      isolation: isolate;
-    }
-
-    .title {
-      position: absolute;
-      top: 18px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: #e2e8f0;
-      font-weight: 700;
-      letter-spacing: .3px;
-      opacity: .85;
-      text-align: center;
-      font-size: clamp(16px, 2.2vw, 18px);
-      user-select: none;
-      pointer-events: none;
-    }
-
-    /* 3D scene */
-    .scene{
-      width: min(900px, 92vw);
-      aspect-ratio: 3 / 2;
-      perspective: 2000px;
-      position: relative;
-    }
-
-    /* Book container */
-    .book{
-      width: 100%;
-      height: 100%;
-      position: relative;
-      transform-style: preserve-3d;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      background: var(--card);
-      overflow: hidden;
-    }
-
-    /* Spine illusion */
-    .spine{
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: calc(50% - var(--page-gap));
-      width: calc(var(--page-gap) * 2);
-      background: linear-gradient(90deg, rgba(0,0,0,.06), rgba(255,255,255,.6), rgba(0,0,0,.06));
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    /* Cover (front) */
-    .cover{
-      position: absolute;
-      inset: 0;
-      background: var(--brand);
-      color: #e6f6ff;
-      transform-origin: left center;
-      transform: rotateY(0deg) translateZ(2px);
-      transition: transform 1.1s cubic-bezier(.2,.7,.1,1);
-      z-index: 8;
-      display: grid;
-      grid-template-rows: 1fr auto;
-    }
-    .cover-inner{
-      display: grid;
-      grid-template-rows: 1fr auto;
-    }
-    .cover-graphic{
-      display: grid;
-      place-items: center;
-      padding: 24px;
-    }
-    .cover-graphic .img-wrap{
-      width: min(560px, 78%);
-      aspect-ratio: 16/10;
-      border-radius: calc(var(--radius) - 6px);
-      background: #0a96ce;
-      border: 2px solid rgba(255,255,255,.18);
-      box-shadow: inset 0 0 0 1px rgba(0,0,0,.08);
-      overflow: hidden;
-      position: relative;
-    }
-    .cover-graphic .img-wrap img{
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-    .cover-title{
-      text-align: center;
-      padding: 8px 16px 0;
-      font-weight: 800;
-      letter-spacing: .4px;
-      font-size: clamp(18px, 3.5vw, 28px);
-      color: #eaf8ff;
-    }
-    .cover-sub{
-      text-align: center;
-      margin: 4px 16px 0;
-      color: #d7f1ff;
-      opacity: .9;
-      font-size: clamp(12px, 2.2vw, 14px);
-    }
-    .open-bar{
-      padding: 18px 20px 20px;
-      display: grid;
-      place-items: center;
-      gap: 10px;
-    }
-    .open-btn{
-      -webkit-tap-highlight-color: transparent;
-      background: #0b79a8;
-      color: #e6f6ff;
-      border: 0;
-      border-radius: 10px;
-      padding: 12px 18px;
-      font-weight: 700;
-      letter-spacing: .3px;
-      cursor: pointer;
-      box-shadow: 0 8px 18px rgba(0,0,0,.25), inset 0 -1px 0 rgba(255,255,255,.15);
-      transition: transform .15s ease, box-shadow .15s ease, background .2s ease;
-    }
-    .open-btn:hover { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(0,0,0,.28), inset 0 -1px 0 rgba(255,255,255,.15); }
-    .open-btn:active{ transform: translateY(0); box-shadow: 0 8px 18px rgba(0,0,0,.25), inset 0 -1px 0 rgba(255,255,255,.15); }
-
-    /* Cover decorative sheen */
-    .cover::after{
-      content:"";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(120deg, rgba(255,255,255,.08), transparent 35%, rgba(255,255,255,.06) 60%, transparent);
-      mix-blend-mode: screen;
-      pointer-events: none;
-    }
-
-    /* When open */
-    .cover.open{
-      transform: rotateY(-162deg) translateZ(2px);
-      box-shadow: 20px 0 40px rgba(0,0,0,.35);
-    }
-
-    /* Pages stack */
-    .pages{
-      position: absolute;
-      inset: 0;
-      padding: 16px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--page-gap);
-      z-index: 2;
-      pointer-events: none; /* until cover opens */
-    }
-    .pages.ready{ pointer-events: auto; }
-
-    /* Individual page (right stack flips left) */
-    .page{
-      position: absolute;
-      top: 0; bottom: 0;
-      left: 50%; right: 0;
-      padding: 16px;
-      transform-origin: left center;
-      transform-style: preserve-3d;
-      background: transparent;
-      border-radius: var(--radius);
-      transition: transform 1s cubic-bezier(.2,.7,.1,1), box-shadow .6s ease;
-      box-shadow: 0 2px 14px rgba(0,0,0,.15);
-      will-change: transform;
-    }
-    .page-surface{
-      position: absolute;
-      inset: 0;
-      background: var(--card);
-      border-radius: var(--radius);
-      overflow: hidden;
-      backface-visibility: hidden;
-      display: grid;
-      grid-template-rows: auto 1fr;
-    }
-    /* backside */
-    .page-surface.back{
-      transform: rotateY(180deg);
-      background: #f8fafc;
-      border-left: 1px solid rgba(0,0,0,.06);
-    }
-
-    .page .content{
-      height: 100%;
-      display: grid;
-      grid-template-rows: auto 1fr;
-      gap: 12px;
-    }
-    .image-area{
-      padding: 12px;
-      display: grid;
-      place-items: center;
-      background: #f1f5f9;
-      border-bottom: 1px solid rgba(0,0,0,.06);
-    }
-    .image-area .img-wrap{
-      width: 100%;
-      max-width: 480px;
-      aspect-ratio: 16/10;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid rgba(0,0,0,.06);
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.35);
-      background: #e2e8f0;
-    }
-    .image-area img{
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-    .text-area{
-      padding: 14px 16px 18px;
-      overflow: auto;
-    }
-    .text-area h2{
-      margin: 0 0 6px;
-      font-size: clamp(16px, 2.8vw, 22px);
-      line-height: 1.2;
-      color: var(--text);
-      letter-spacing: .2px;
-    }
-    .text-area p{
-      margin: 0 0 10px;
-      color: var(--muted);
-      line-height: 1.6;
-      font-size: clamp(13px, 2.3vw, 15px);
-    }
-    .tag{
-      display: inline-block;
-      background: #e0f2fe;
-      color: #075985;
-      border-radius: 999px;
-      padding: 6px 10px;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: .25px;
-    }
-
-    /* Flip state */
-    .page.flipped{
-      transform: rotateY(-180deg);
-      box-shadow: -8px 0 20px rgba(0,0,0,.18);
-    }
-
-    /* Nav controls */
-    .nav{
-      position: absolute;
-      inset: 0;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      align-items: center;
-      z-index: 6;
-      pointer-events: none; /* enable on open */
-      opacity: 0;
-      transition: opacity .35s ease;
-    }
-    .nav.active{ pointer-events: auto; opacity: 1; }
-    .nav .side{
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: auto;
-    }
-    .arrow{
-      -webkit-tap-highlight-color: transparent;
-      width: 44px; height: 44px;
-      border-radius: 50%;
-      border: 0;
-      background: rgba(15,23,42,.8);
-      color: #e2e8f0;
-      display: grid; place-items: center;
-      cursor: pointer;
-      box-shadow: 0 8px 18px rgba(0,0,0,.25);
-      transition: transform .15s ease, background .2s ease;
-    }
-    .arrow:hover{ transform: translateY(-1px); background: rgba(15,23,42,.95); }
-    .arrow[disabled]{ opacity: .35; cursor: not-allowed; transform: none; }
-
-    .indicator{
-      position: absolute;
-      bottom: 10px;
-      left: 50%; transform: translateX(-50%);
-      background: rgba(15,23,42,.85);
-      color: #e2e8f0;
-      border-radius: 10px;
-      padding: 6px 10px;
-      font-size: 12px;
-      letter-spacing: .3px;
-      z-index: 6;
-      opacity: 0;
-      transition: opacity .35s ease;
-    }
-    .indicator.show{ opacity: 1; }
-
-    /* Confetti */
-    .confetti{
-      position: absolute;
-      inset: -20px 0 0;
-      pointer-events: none;
-      z-index: 9;
-    }
-    .piece{
-      position: absolute;
-      width: 8px; height: 14px;
-      top: -10px;
-      border-radius: 2px;
-      opacity: .9;
-      transform: translateY(-100px) rotate(0deg);
-      animation: fall linear forwards, spin linear forwards;
-    }
-    @keyframes fall{
-      to{ transform: translateY(110vh) rotate(var(--rot, 0deg)); opacity: .95; }
-    }
-    @keyframes spin{
-      to{ rotate: 1turn; }
-    }
-
-    /* Gentle idle float for the whole book */
-    .book{
-      animation: breathe 6s ease-in-out infinite;
-    }
-    @keyframes breathe{
-      0%, 100%{ transform: translateZ(0) translateY(0) }
-      50%{ transform: translateZ(0) translateY(-4px) }
-    }
-
-    /* Responsiveness tweaks */
-    @media (max-width: 560px){
-      .pages{ padding: 10px; }
-      .page{ padding: 10px; }
-      .image-area{ padding: 8px; }
-      .text-area{ padding: 10px 12px 14px; }
-    }
-
-
- 
-  </style>
+    <title>Hassan Khalid | BSCS51S24R017</title>
 </head>
-<body>
-  <main class="stage" aria-label="Interactive birthday card">
-    <div class="title">Happy Birthday, Maaz! Open your card 🎉</div>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f9; color: #333; line-height: 1.6;">
 
-    <div class="scene" aria-live="polite">
-      <div class="book" id="book" aria-label="Birthday card book">
-        <div class="spine" aria-hidden="true"></div>
+    <!-- PAGE 1: COVER PAGE -->
+    <div id="cover-page" style="height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; border-bottom: 2px solid #ddd; background: linear-gradient(135deg, #ffffff 0%, #eef2f3 100%); padding: 20px;">
+        <div style="border: 5px solid #2c3e50; padding: 40px; background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 600px; width: 100%;">
+            <h1 style="font-size: 3rem; color: #2c3e50; margin-bottom: 20px; font-weight: 700; border-bottom: 2px solid #3498db; display: inline-block; padding-bottom: 10px;">Assignment Cover</h1>
+            
+            <div style="margin-top: 30px; text-align: left; padding: 20px; border-left: 4px solid #3498db;">
+                <p style="font-size: 1.2rem; margin: 10px 0;"><strong>Student Name:</strong>Hassan Khalid</p>
+                <p style="font-size: 1.2rem; margin: 10px 0;"><strong>Roll Number:</strong>BSCS51S24R017</p>
+                <p style="font-size: 1.2rem; margin: 10px 0;"><strong>City:</strong>Sargodha</p>
+                <p style="font-size: 1.2rem; margin: 10px 0;"><strong>Project:</strong> Comprehensive HTML Tag Demonstration</p>
+                <p style="font-size: 1.2rem; margin: 10px 0;"><strong>Date:</strong> February 25, 2026</p>
+            </div>
 
-        <!-- Pages stack (right side flips to the left like a real book) -->
-        <div class="pages" id="pages" aria-hidden="true">
-          <!-- Page 1 -->
-          <div class="page" data-index="0" style="z-index: 5;">
-            <div class="page-surface front">
-              <div class="content">
-                <div class="image-area">
-                  <div class="img-wrap">
-                    <img alt="Birthday banner for Maaz"
-                      src='/IMG.png' />
-                  </div>
-                </div>
-                <div class="text-area">
-                  <span class="tag">To: Maaz Usmani</span>
-                  <h2>Another amazing year begins!</h2>
-                  <p>Dear Maaz, may your day be full of warm memories, good laughs, and the company of the people you love. You make the world brighter just by being in it.</p>
-                  <p>May this year bring you new adventures, growth, and all the success you deserve. Keep shining!</p>
-                </div>
-              </div>
+            <div style="margin-top: 40px;">
+                <a href="#content-page" style="text-decoration: none; background-color: #3498db; color: white; padding: 15px 30px; border-radius: 5px; font-weight: bold; transition: background 0.3s; display: inline-block;">Scroll to Content</a>
             </div>
-            <div class="page-surface back">
-              <div class="content">
-                <div class="image-area">
-                  <div class="img-wrap">
-                    <img class="second_img" alt="Friendship collage"
-                      src='/Bike.png' />
-                  </div>
-                </div>
-                <div class="text-area">
-                  <span class="tag">Appreciation</span>
-                  <h2>You're one of a kind</h2>
-                  <p>Your kindness, drive, and humor make every day better. I'm grateful for your friendship and the memories we've made—and all those still to come.</p>
-                  <p>Keep doing you, Maaz. The world needs your light.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Page 2 -->
-          <div class="page" data-index="1" style="z-index: 4;">
-            <div class="page-surface front">
-              <div class="content">
-                <div class="image-area">
-                  <div class="img-wrap">
-                    <img alt="Confetti celebration"
-                      src='/Friend.webp' />
-                  </div>
-                </div>
-                <div class="text-area">
-                  <span class="tag">Blessings</span>
-                  <h2>Health, peace, and prosperity</h2>
-                  <p>May your path be guided with clarity, your heart be at peace, and your efforts be rewarded. Wishing you unshakable health and a year filled with abundance.</p>
-                  <p>Keep believing in yourself, Maaz—your best chapters are still being written.</p>
-                </div>
-              </div>
-            </div>
-            <div class="page-surface back">
-              <div class="content">
-                <div class="image-area">
-                  <div class="img-wrap">
-                    <img alt="Friendship collage"
-                      src='/Happy.jpeg' />
-                  </div>
-                </div>
-                <div class="text-area">
-                  <span class="tag">Cheers!</span>
-                  <h2>Have the happiest birthday, Maaz!</h2>
-                  <p>May your dreams find you, and your courage carry you. Today and always, you are celebrated.</p>
-                  <p>— With love, your friend</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Page 3 -->
-          <div class="page" data-index="2" style="z-index: 3;">
-            <div class="page-surface front">
-              <div class="content">
-                <div class="image-area">
-                  <div class="img-wrap">
-                    <img alt="Friendship collage"
-                      src='/Happy.jpeg' />
-                  </div>
-                </div>
-                <div class="text-area">
-                  <span class="tag">Memories</span>
-                  <h2>Cherished moments</h2>
-                  <p>Looking back on all the great times we've shared brings a smile to my face. From simple hangouts to big adventures, every moment with you is special.</p>
-                  <p>Here's to creating many more wonderful memories together in the year ahead!</p>
-                </div>
-              </div>
-            </div>
-            <div class="page-surface back">
-              <div class="content">
-                <div class="image-area">
-                  <div class="img-wrap">
-                    <img alt="Adventure awaits"
-                      src='data:image/svg+xml;utf8,<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800"><rect width="100%" height="100%" fill="%23eff6ff"/><g><polygon points="100,200 300,200 200,100" fill="%230ea5e9"/><rect x="80" y="200" width="240" height="120" rx="8" fill="%23f59e0b"/><circle cx="120" cy="280" r="20" fill="%23374151"/><circle cx="280" cy="280" r="20" fill="%23374151"/></g><text x="100" y="500" font-size="42" font-family="Arial" fill="%230ea5e9" font-weight="700">Adventure Awaits</text><text x="100" y="550" font-size="24" font-family="Arial" fill="%234b5563">New experiences and exciting journeys ahead!</text></svg>' />
-                  </div>
-                </div>
-                <div class="text-area">
-                  <span class="tag">Future</span>
-                  <h2>Exciting adventures ahead</h2>
-                  <p>As you step into this new year of life, may you embrace new opportunities and chase your dreams with passion.</p>
-                  <p>May every challenge become a stepping stone, and every goal within your reach. The world is yours to explore!</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Page 4 -->
-          <div class="page" data-index="3" style="z-index: 2;">
-            <div class="page-surface front">
-              <div class="content">
-                <div class="image-area">
-                  <div class="img-wrap">
-                    <img alt="Cake and candles"
-                      src='/cake.jpg' />
-                  </div>
-                </div>
-                <div class="text-area">
-                  <span class="tag">Final Wishes</span>
-                  <h2>Have the happiest birthday, Maaz!</h2>
-                  <p>May your dreams find you, and your courage carry you. Today and always, you are celebrated.</p>
-                  <p>— With love, your friend</p>
-                </div>
-              </div>
-            </div>
-            <div class="page-surface back">
-              <div class="content">
-                <div class="image-area">
-                  <div class="img-wrap">
-                    <img alt="Final wishes"
-                      src='data:image/svg+xml;utf8,<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800"><rect width="100%" height="100%" fill="%23fef7ed"/><g><path d="M200,300 Q400,200 600,300 T1000,300" stroke="%23f59e0b" stroke-width="8" fill="none"/><circle cx="200" cy="300" r="12" fill="%230ea5e9"/><circle cx="400" cy="250" r="10" fill="%2322c55e"/><circle cx="600" cy="300" r="8" fill="%23f59e0b"/><circle cx="800" cy="250" r="14" fill="%230ea5e9"/><circle cx="1000" cy="300" r="9" fill="%2322c55e"/></g><text x="200" y="500" font-size="48" font-family="Arial" fill="%23f59e0b" font-weight="700">Happy Birthday!</text><text x="200" y="560" font-size="28" font-family="Arial" fill="%234b5563">Wishing you all the best today and always.</text></svg>' />
-                  </div>
-                </div>
-                <div class="text-area">
-                  <span class="tag">Thank You</span>
-                  <h2>Thank you for being you</h2>
-                  <p>On your special day, I want to thank you for being such an amazing person. Your friendship means the world to me.</p>
-                  <p>May this year be your best one yet, filled with love, laughter, and everything that brings you joy.</p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
+    </div>
 
-        <!-- Navigation overlay -->
-        <div class="nav" id="nav" aria-hidden="true">
-          <div class="side">
-            <button class="arrow" id="prev" aria-label="Previous page" disabled>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-          </div>
-          <div class="side">
-            <button class="arrow" id="next" aria-label="Next page">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-          </div>
-        </div>
+    <!-- PAGE 2: MAIN CONTENT -->
+    <div id="content-page" style="max-width: 1000px; margin: 40px auto; background: white; padding: 60px; box-shadow: 0 0 20px rgba(0,0,0,0.05); min-height: 100vh;">
 
-        <div class="indicator" id="indicator" aria-hidden="true">0 / 4</div>
-
-        <!-- Front cover (on top initially) -->
-        <section class="cover" id="cover" aria-label="Card cover">
-          <div class="cover-inner">
-            <div class="cover-graphic">
-              <div class="img-wrap" aria-hidden="true">
-                <img alt="Cover art"
-                  src='data:image/svg+xml;utf8,<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800"><rect width="100%" height="100%" fill="%230ea5e9"/><g transform="translate(40,60)"><text x="0" y="80" font-size="64" font-family="Arial" fill="%23e6f6ff" font-weight="800">Happy Birthday</text><text x="0" y="140" font-size="36" font-family="Arial" fill="%23def7ff" font-weight="700">Maaz Usmani</text></g><g fill="%23f59e0b"><circle cx="1080" cy="120" r="12"/><circle cx="1020" cy="200" r="10"/><circle cx="1150" cy="220" r="8"/></g><g fill="%2322c55e"><circle cx="940" cy="160" r="10"/><circle cx="980" cy="240" r="9"/></g></svg>' />
-              </div>
-              <div class="cover-title">A special card just for you, Maaz</div>
-              <div class="cover-sub">Open to reveal your birthday wishes</div>
-            </div>
-            <div class="open-bar">
-              <button class="open-btn" id="openBtn" aria-controls="book" aria-expanded="false">Open Card</button>
-            </div>
-          </div>
+        <!-- HEADINGS SECTION -->
+        <section style="margin-bottom: 50px;">
+            <h1 style="color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 10px;">Heading 1: Web Technologies Overview</h1>
+            <h2 style="color: #34495e;">Heading 2: The Core of the Web</h2>
+            <h3 style="color: #7f8c8d;">Heading 3: HTML Structure</h3>
+            <h4 style="color: #95a5a6;">Heading 4: Multimedia Integration</h4>
+            <h5 style="color: #bdc3c7;">Heading 5: Data Presentation with Tables</h5>
+            <h6 style="color: #ecf0f1; background-color: #34495e; display: inline-block; padding: 2px 5px;">Heading 6: Smallest Heading Level</h6>
         </section>
 
-        <!-- Confetti layer -->
-        <div class="confetti" id="confetti" aria-hidden="true"></div>
-      </div>
+        <!-- PARAGRAPHS & FORMATTING -->
+        <section style="margin-bottom: 50px;">
+            <h2 style="color: #2980b9;">Personal Profile & Text Formatting</h2>
+            <p style="font-size: 1.1rem;">
+                My favorite subject is <b>Science</b> and my favorite hobby is <i>to cook</i>. 
+                I believe that <mark style="background-color: #fff3cd;">learning never stops</mark>.
+                Sometimes I feel <small>small</small> in this big world, but my dreams are <sup style="color: #e74c3c;">high</sup>.
+                I recently updated my <del style="color: #95a5a6;">old status</del> to <ins style="color: #27ae60;">Active Coder</ins>.
+                Chemical formulas like H<sub>2</sub>O are interesting too!
+            </p>
+
+            <h3 style="color: #7f8c8d;">Preformatted Text Example</h3>
+            <pre style="background: #f8f9fa; border: 1px solid #ddd; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: 'Courier New', Courier, monospace;">
+function helloWorld() {
+    console.log("Welcome to my assignment!");
+    return "Ready to code";
+}
+            </pre>
+
+            <blockquote style="border-left: 5px solid #3498db; padding-left: 20px; margin: 20px 0; font-style: italic;">
+                "Code is like humor. When you have to explain it, it’s bad." — Cory House
+                <br>
+                'Simplicity is the ultimate sophistication.' — Leonardo da Vinci
+            </blockquote>
+        </section>
+
+        <!-- LISTS SECTION -->
+        <section style="margin-bottom: 50px;">
+            <div style="display: flex; gap: 40px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 250px;">
+                    <h3 style="color: #2c3e50;">My Favorite Websites (Unordered)</h3>
+                    <ul style="padding-left: 20px;">
+                        <li><a href="https://github.com" style="color: #3498db; text-decoration: none;">GitHub</a> - Coding Community</li>
+                        <li><a href="https://stackoverflow.com" style="color: #3498db; text-decoration: none;">Stack Overflow</a> - Q&A</li>
+                      
+                    </ul>
+                </div>
+                <div style="flex: 1; min-width: 250px;">
+                    <h3 style="color: #2c3e50;">Learning Roadmap (Ordered)</h3>
+                    <ol style="padding-left: 20px;">
+                        <li>Master Semantic HTML Tags</li>
+                        <li>Deep dive into CSS Flexbox & Grid</li>
+                        <li>Explore JavaScript ES6 Features</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <!-- TABLE SECTION -->
+        <section style="margin-bottom: 50px;">
+            <h2 style="color: #2980b9;">Weekly Progress Table</h2>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                <thead>
+                    <tr style="background-color: #2c3e50; color: white; text-align: left;">
+                        <th style="padding: 12px; border: 1px solid #ddd;">Day</th>
+                        <th style="padding: 12px; border: 1px solid #ddd;">Activity</th>
+                        <th style="padding: 12px; border: 1px solid #ddd;">Duration</th>
+                        <th style="padding: 12px; border: 1px solid #ddd;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 12px; border: 1px solid #ddd;">Monday</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">HTML Forms</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">2 Hours</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; color: #27ae60;">Completed</td>
+                    </tr>
+                    <tr style="background-color: #f9f9f9;">
+                        <td style="padding: 12px; border: 1px solid #ddd;">Tuesday</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">Multimedia</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">3 Hours</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; color: #f39c12;">In Progress</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px; border: 1px solid #ddd;">Wednesday</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">Layout Styling</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">1.5 Hours</td>
+                        <td style="padding: 12px; border: 1px solid #ddd; color: #e74c3c;">Pending</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- IMAGE SECTION -->
+        <section style="margin-bottom: 50px; text-align: center;">
+            <h2 style="color: #2c3e50; text-align: left;">Student Profile Image</h2>
+            <img src="images/self.jpeg" alt="Student Profile" style="width: 250px; height: 250px; border-radius: 50%; border: 8px solid #f0f0f0; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); object-fit: cover;"/>
+            <p style="margin-top: 10px; color: #7f8c8d;"><small>Image caption: Student Profile Placeholder</small></p>
+        </section>
+
+        <!-- FORM & LOGIN SECTION -->
+        <section style="margin-bottom: 50px; background: #fdfdfd; padding: 30px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #2980b9;">Contact & Inquiry Form</h2>
+            <form action="#" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px;">
+                <div>
+                    <label style="display: block; margin-bottom: 5px;">Username:</label>
+                    <input type="text" placeholder="Enter username" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px;">Email ID:</label>
+                    <input type="email" placeholder="[Your Email]" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px;">Password:</label>
+                    <input type="password" placeholder="••••••••" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px;">Subject Interest:</label>
+                    <select style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option>Web Development</option>
+                        <option>App Development</option>
+                        <option>Data Science</option>
+                    </select>
+                </div>
+                <div style="grid-column: span 2;">
+                    <button type="submit" style="background: #2c3e50; color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem;">Submit Application</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- MULTIMEDIA SECTION -->
+        <section style="margin-bottom: 50px;">
+            <h2 style="color: #2c3e50;">Multimedia Showcase</h2>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px;">
+                <div style="flex: 1; min-width: 300px;">
+                    <h3 style="font-size: 1rem;">Educational Video</h3>
+                    <video width="100%" controls style="border-radius: 8px; border: 1px solid #ddd;">
+                        <source src="movie.mp4" type="video/mp4">
+                        Your browser does not support the video tag. Please replace source link.
+                    </video>
+                </div>
+                <div style="flex: 1; min-width: 300px;">
+                    <h3 style="font-size: 1rem;">Project Audio Brief</h3>
+                    <div style="background: #f1f1f1; padding: 20px; border-radius: 8px; text-align: center;">
+                        <audio controls style="width: 100%;">
+                            <source src="audio.mp3" type="audio/mpeg">
+                            Your browser does not support the audio element.
+                        </audio>
+                        <p style="margin-top: 10px; font-size: 0.9rem; color: #777;">Click to play audio introduction</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER / CONTACT INFO -->
+        <footer style="border-top: 2px solid #2c3e50; padding-top: 30px; margin-top: 50px;">
+            <address style="font-style: normal; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <h3 style="margin-bottom: 10px;">Contact Information</h3>
+                    <p><strong>Email:</strong> <a href="mailto:[Your Email]" style="color: #3498db; text-decoration: none;">hassan.uos.82@gmail.com</a></p>
+                    <p><strong>City:</strong> Sargodha</p>
+                </div>
+                <div style="text-align: right;">
+                    <p><abbr title="HyperText Markup Language" style="text-decoration: none; border-bottom: 1px dotted #333;">HTML</abbr> Assignment Completed.</p>
+                    <p>&copy; 2026 Hassan Khalid</p>
+                </div>
+            </address>
+        </footer>
     </div>
-  </main>
 
-  <script>
-    (function(){
-      const cover = document.getElementById('cover');
-      const openBtn = document.getElementById('openBtn');
-      const pagesWrap = document.getElementById('pages');
-      const pages = Array.from(document.querySelectorAll('.page'));
-      const nextBtn = document.getElementById('next');
-      const prevBtn = document.getElementById('prev');
-      const nav = document.getElementById('nav');
-      const indicator = document.getElementById('indicator');
-      const confettiWrap = document.getElementById('confetti');
-
-      let current = 0; // how many pages have been flipped
-      const total = pages.length;
-
-      function updateIndicator(){
-        indicator.textContent = current + ' / ' + total;
-      }
-      function updateButtons(){
-        prevBtn.disabled = current === 0;
-        nextBtn.disabled = current === total;
-      }
-      function setZIndexes(){
-        // Highest z-index for earliest page not yet flipped
-        const base = total + 1;
-        pages.forEach((p, i) => {
-          const z = base - i;
-          p.style.zIndex = String(z);
-        });
-      }
-
-      function confettiBurst(count = 80, duration = [1600, 2600]){
-        const colors = ['#0ea5e9', '#f59e0b', '#22c55e', '#e11d48', '#64748b'];
-        const w = confettiWrap.clientWidth || window.innerWidth;
-        for(let i=0;i<count;i++){
-          const piece = document.createElement('div');
-          piece.className = 'piece';
-          const left = Math.random() * w;
-          const delay = Math.random() * 140;
-          const rot = (Math.random() * 720 - 360).toFixed(1);
-          const dur = Math.round(duration[0] + Math.random()*(duration[1]-duration[0]));
-          const color = colors[Math.floor(Math.random()*colors.length)];
-          piece.style.left = left + 'px';
-          piece.style.background = color;
-          piece.style.animationDuration = dur + 'ms, ' + (dur * 0.9) + 'ms';
-          piece.style.animationDelay = delay + 'ms, ' + delay + 'ms';
-          piece.style.setProperty('--rot', rot + 'deg');
-          confettiWrap.appendChild(piece);
-          // cleanup
-          setTimeout(() => piece.remove(), dur + 1000);
-        }
-      }
-
-      function openCard(){
-        cover.classList.add('open');
-        openBtn.setAttribute('aria-expanded', 'true');
-        // enable pages and nav after cover swings
-        setTimeout(() => {
-          pagesWrap.classList.add('ready');
-          nav.classList.add('active');
-          nav.setAttribute('aria-hidden','false');
-          indicator.classList.add('show');
-          indicator.setAttribute('aria-hidden','false');
-          updateIndicator();
-          updateButtons();
-        }, 650);
-        confettiBurst();
-      }
-
-      function flipNext(){
-        if(current >= total) return;
-        const page = pages[current];
-        page.classList.add('flipped');
-        current += 1;
-        updateIndicator();
-        updateButtons();
-      }
-
-      function flipPrev(){
-        if(current <= 0) return;
-        const page = pages[current - 1];
-        page.classList.remove('flipped');
-        current -= 1;
-        updateIndicator();
-        updateButtons();
-      }
-
-      // Accessibility: keyboard support
-      function onKey(e){
-        if(cover && !cover.classList.contains('open')){
-          if(e.key === 'Enter' || e.key === ' '){
-            e.preventDefault();
-            openCard();
-          }
-          return;
-        }
-        if(e.key === 'ArrowRight'){ flipNext(); }
-        else if(e.key === 'ArrowLeft'){ flipPrev(); }
-      }
-
-      // Initial z-index
-      setZIndexes();
-      updateIndicator();
-
-      // Events
-      openBtn.addEventListener('click', openCard);
-      nextBtn.addEventListener('click', flipNext);
-      prevBtn.addEventListener('click', flipPrev);
-      document.addEventListener('keydown', onKey, {passive: false});
-
-      // Improve mobile tap areas by preventing accidental text selection
-      document.addEventListener('selectstart', (e) => {
-        const t = e.target;
-        if(t.closest('.arrow') || t.closest('#openBtn')) e.preventDefault();
-      });
-
-      // Resize confetti container width if needed (not strictly necessary, safe fallback)
-      window.addEventListener('resize', () => {
-        // no-op; using absolute positions
-      });
-    })();
-  </script>
 </body>
 </html>
